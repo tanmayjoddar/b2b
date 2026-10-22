@@ -19,13 +19,16 @@ import {
   VerificationMethod,
   VerificationResult,
   FactoryStatus,
+  Role,
 } from '@factorymatch/shared';
 
 export default function AdminVerificationPage() {
   const [factories, setFactories] = useState<any[]>([]);
   const [selectedFactory, setSelectedFactory] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Form state
   const [verifyForm, setVerifyForm] = useState({
@@ -35,17 +38,37 @@ export default function AdminVerificationPage() {
     notes: 'Walkthrough completed. FoSCoS registration verified against central food safety portal.',
   });
 
+  const loadFactories = async () => {
+    setLoading(true);
+    try {
+      const data = await api.listFactories();
+      setFactories(data || []);
+    } catch {
+      setFactories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    async function loadFactories() {
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('fm_user') : null;
+    if (storedUser) {
       try {
-        const data = await api.listFactories();
-        setFactories(data || []);
-      } catch {
-        setFactories([]);
-      }
+        setCurrentUser(JSON.parse(storedUser));
+      } catch {}
     }
     loadFactories();
   }, []);
+
+  const handleSwitchToAdmin = async () => {
+    try {
+      const res = await api.loginWithPassword({ email: 'admin@factorymatch.in', password: 'Admin@123456' });
+      setCurrentUser(res.user);
+      await loadFactories();
+    } catch (err: any) {
+      setNotification(err.message || 'Failed to switch to admin');
+    }
+  };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +84,7 @@ export default function AdminVerificationPage() {
         result: verifyForm.result,
         notes: verifyForm.notes,
         newStatus: FactoryStatus.ACTIVE,
-      }).catch(() => {});
+      });
 
       setNotification(`Factory ${selectedFactory.legalName} verified as ${verifyForm.tier}. Status updated to ACTIVE.`);
       setFactories((prev) =>
@@ -92,6 +115,25 @@ export default function AdminVerificationPage() {
           </p>
         </div>
 
+        {/* RBAC Notice if user is not ADMIN */}
+        {currentUser && currentUser.role !== Role.ADMIN && (
+          <div className="p-5 rounded-3xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs space-y-3">
+            <div className="flex items-center gap-2 font-bold text-amber-950">
+              <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+              <span>Restricted Operations: Administrator Privilege Required</span>
+            </div>
+            <p className="text-amber-800 leading-relaxed">
+              You are currently authenticated as <strong>{currentUser.email || currentUser.role}</strong> ({currentUser.role}). Performing accreditation audits and issuing verification badges requires Admin role.
+            </p>
+            <button
+              onClick={handleSwitchToAdmin}
+              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold transition flex items-center gap-2 min-h-[44px]"
+            >
+              <span>Switch to Admin Operator (admin@factorymatch.in)</span>
+            </button>
+          </div>
+        )}
+
         {notification && (
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -107,8 +149,18 @@ export default function AdminVerificationPage() {
             </span>
           </div>
 
-          <div className="divide-y divide-slate-100">
-            {factories.map((fac) => (
+          {loading ? (
+            <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+              Loading factory verification queue...
+            </div>
+          ) : factories.length === 0 ? (
+            <div className="py-12 text-center space-y-2 text-slate-500 text-xs">
+              <Building2 className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="font-bold text-slate-800">No factories currently registered in database</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {factories.map((fac) => (
               <div
                 key={fac.id}
                 className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -138,7 +190,8 @@ export default function AdminVerificationPage() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Modal: Verification Decision */}

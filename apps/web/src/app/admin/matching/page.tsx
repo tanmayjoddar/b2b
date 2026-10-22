@@ -13,6 +13,7 @@ import {
 import { AppLayout } from '../../../components/layout/AppLayout';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { api } from '../../../lib/api/client';
+import { Role } from '@factorymatch/shared';
 
 export default function AdminMatchingPage() {
   const [briefs, setBriefs] = useState<any[]>([]);
@@ -20,24 +21,46 @@ export default function AdminMatchingPage() {
   const [selectedBrief, setSelectedBrief] = useState<any | null>(null);
   const [selectedFactoryIds, setSelectedFactoryIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [briefsData, factoriesData] = await Promise.all([
+        api.listBriefs(),
+        api.listFactories(),
+      ]);
+      setBriefs(briefsData || []);
+      setFactories(factoriesData || []);
+    } catch {
+      setBriefs([]);
+      setFactories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchData() {
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('fm_user') : null;
+    if (storedUser) {
       try {
-        const [briefsData, factoriesData] = await Promise.all([
-          api.listBriefs(),
-          api.listFactories(),
-        ]);
-        setBriefs(briefsData || []);
-        setFactories(factoriesData || []);
-      } catch {
-        setBriefs([]);
-        setFactories([]);
-      }
+        setCurrentUser(JSON.parse(storedUser));
+      } catch {}
     }
     fetchData();
   }, []);
+
+  const handleSwitchToAdmin = async () => {
+    try {
+      const res = await api.loginWithPassword({ email: 'admin@factorymatch.in', password: 'Admin@123456' });
+      setCurrentUser(res.user);
+      await fetchData();
+    } catch (err: any) {
+      setNotification(err.message || 'Failed to switch to admin');
+    }
+  };
 
   const toggleFactory = (factoryId: string) => {
     if (selectedFactoryIds.includes(factoryId)) {
@@ -58,11 +81,12 @@ export default function AdminMatchingPage() {
       await api.createShortlist(selectedBrief.id, {
         briefId: selectedBrief.id,
         factoryIds: selectedFactoryIds,
-      }).catch(() => {});
+      });
 
       setNotification(`Shortlist published for "${selectedBrief.productName}" with ${selectedFactoryIds.length} verified plants.`);
       setSelectedBrief(null);
       setSelectedFactoryIds([]);
+      await fetchData();
     } catch (err: any) {
       setNotification(err.message || 'Failed to publish shortlist');
     } finally {
@@ -81,6 +105,25 @@ export default function AdminMatchingPage() {
             Curate 3–5 verified plants per client brief based on audited capacity, MOQ, and regional cluster.
           </p>
         </div>
+
+        {/* RBAC Notice if user is not ADMIN */}
+        {currentUser && currentUser.role !== Role.ADMIN && (
+          <div className="p-5 rounded-3xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs space-y-3">
+            <div className="flex items-center gap-2 font-bold text-amber-950">
+              <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" />
+              <span>Restricted Operations: Administrator Privilege Required</span>
+            </div>
+            <p className="text-amber-800 leading-relaxed">
+              You are currently authenticated as <strong>{currentUser.email || currentUser.role}</strong> ({currentUser.role}). Curating shortlists and issuing RFQ invitations requires Platform Admin role.
+            </p>
+            <button
+              onClick={handleSwitchToAdmin}
+              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold transition flex items-center gap-2 min-h-[44px]"
+            >
+              <span>Switch to Admin Operator (admin@factorymatch.in)</span>
+            </button>
+          </div>
+        )}
 
         {notification && (
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">

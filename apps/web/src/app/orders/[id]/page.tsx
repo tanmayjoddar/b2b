@@ -140,7 +140,7 @@ export default function OrderDetailPage() {
               <StatusBadge status={order.status} size="sm" />
             </div>
             <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-900 mt-1">
-              {order.productName}
+              {order.productName || order.quote?.quoteRequest?.brief?.productName || 'Batch Production Order'}
             </h1>
           </div>
 
@@ -305,21 +305,34 @@ export default function OrderDetailPage() {
                 <FileCheck className="w-4 h-4 text-accent-700" />
                 <span>Prototype Sample Status</span>
               </h3>
-              <StatusBadge status={sample.status} size="sm" />
+              {sample ? (
+                <StatusBadge status={sample.status} size="sm" />
+              ) : (
+                <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  Pending Request
+                </span>
+              )}
             </div>
 
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Tracking Reference:</span>
-                <span className="font-mono font-bold text-slate-900">{sample.trackingRef}</span>
+            {sample ? (
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Tracking Reference:</span>
+                  <span className="font-mono font-bold text-slate-900">{sample.trackingRef || 'Awaiting dispatch'}</span>
+                </div>
+                <div className="py-1">
+                  <span className="text-slate-500 block mb-1">Founder Sensory Feedback:</span>
+                  <p className="text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                    {sample.brandFeedback || 'Sample under physical inspection'}
+                  </p>
+                </div>
               </div>
-              <div className="py-1">
-                <span className="text-slate-500 block mb-1">Founder Sensory Feedback:</span>
-                <p className="text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  {sample.brandFeedback}
-                </p>
+            ) : (
+              <div className="py-6 text-center text-xs text-slate-400 font-medium space-y-1">
+                <p>Prototype formulation sample not yet dispatched by factory.</p>
+                <p className="text-[11px] text-slate-400">Advance escrow released once benchmark sample is approved.</p>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Escrow Milestone Breakdown */}

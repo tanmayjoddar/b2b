@@ -31,6 +31,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const storedUser = typeof window !== 'undefined' ? localStorage.getItem('fm_user') : null;
@@ -45,6 +46,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     } else {
       router.push('/login');
     }
+    setMounted(true);
   }, [router]);
 
   const handleRoleSwitch = async (role: Role) => {
@@ -69,22 +71,41 @@ export function AppLayout({ children }: AppLayoutProps) {
     }
   };
 
-  const navLinks = [
-    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Briefs', href: '/briefs', icon: FileSpreadsheet },
-    { label: 'Factories', href: '/factories', icon: Building2 },
-    { label: 'Orders', href: '/orders', icon: PackageCheck },
-    ...(currentUser?.role === Role.ADMIN
-      ? [
-          { label: 'Verification', href: '/admin/verification', icon: ShieldCheck },
-          { label: 'Matching', href: '/admin/matching', icon: Layers },
-          { label: 'Audit Trail', href: '/admin/audit', icon: History },
-        ]
-      : []),
-    ...(currentUser?.role === Role.FACTORY
-      ? [{ label: 'Factory Quotes', href: '/factory/quotes', icon: Building2 }]
-      : []),
-  ];
+  const getNavLinks = () => {
+    if (currentUser?.role === Role.ADMIN) {
+      return [
+        { label: 'Verification', href: '/admin/verification', icon: ShieldCheck },
+        { label: 'Matching', href: '/admin/matching', icon: Layers },
+        { label: 'Audit Trail', href: '/admin/audit', icon: History },
+        { label: 'Batch Orders', href: '/orders', icon: PackageCheck },
+        { label: 'Factories', href: '/factories', icon: Building2 },
+      ];
+    }
+    if (currentUser?.role === Role.FACTORY) {
+      return [
+        { label: 'Incoming RFQs', href: '/factory/quotes', icon: FileSpreadsheet },
+        { label: 'Batch Orders', href: '/orders', icon: PackageCheck },
+        { label: 'Plant Profile', href: '/factory/onboard', icon: Building2 },
+        { label: 'Directory', href: '/factories', icon: Layers },
+      ];
+    }
+    return [
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { label: 'Briefs', href: '/briefs', icon: FileSpreadsheet },
+      { label: 'Factories', href: '/factories', icon: Building2 },
+      { label: 'Orders', href: '/orders', icon: PackageCheck },
+    ];
+  };
+
+  const navLinks = getNavLinks();
+
+  if (!mounted && typeof window !== 'undefined' && !localStorage.getItem('fm_token')) {
+    return (
+      <div className="min-h-screen bg-[#F6F8FA] flex items-center justify-center">
+        <div className="text-xs font-bold text-slate-400">Authenticating session...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F6F8FA] flex flex-col md:flex-row pb-20 md:pb-0">
@@ -153,7 +174,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* Desktop Nav Pills */}
           <div className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1 rounded-full border border-slate-200 text-xs font-semibold">
-            {navLinks.slice(0, 4).map((link) => {
+            {navLinks.map((link) => {
               const isActive = pathname.startsWith(link.href);
               return (
                 <Link

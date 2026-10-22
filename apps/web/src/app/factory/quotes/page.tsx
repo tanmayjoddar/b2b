@@ -9,16 +9,20 @@ import {
   Building2,
   Calendar,
   Package,
+  ShieldAlert,
+  ArrowRight,
 } from 'lucide-react';
 import { AppLayout } from '../../../components/layout/AppLayout';
 import { api } from '../../../lib/api/client';
-import { rupeesToPaise } from '@factorymatch/shared';
+import { rupeesToPaise, Role } from '@factorymatch/shared';
 
 export default function FactoryQuotesPage() {
   const [requests, setRequests] = useState<any[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Quote input form
   const [quoteForm, setQuoteForm] = useState({
@@ -28,17 +32,39 @@ export default function FactoryQuotesPage() {
     validDays: 14,
   });
 
+  const loadRequests = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getMyQuoteRequests();
+      setRequests(data || []);
+    } catch {
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    async function loadRequests() {
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('fm_user') : null;
+    if (storedUser) {
       try {
-        const data = await api.getMyQuoteRequests();
-        setRequests(data || []);
-      } catch {
-        setRequests([]);
-      }
+        const u = JSON.parse(storedUser);
+        setCurrentUser(u);
+      } catch {}
     }
     loadRequests();
   }, []);
+
+  const handleSwitchToFactory = async () => {
+    try {
+      const otpRes = await api.requestOtp({ phone: '+919876543210' });
+      const res = await api.verifyOtp({ phone: '+919876543210', otp: otpRes.debugOtp || '123456' });
+      setCurrentUser(res.user);
+      await loadRequests();
+    } catch (err: any) {
+      setNotification(err.message || 'Failed to switch to factory account');
+    }
+  };
 
   const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,10 +88,11 @@ export default function FactoryQuotesPage() {
           paymentTerms: '50% Advance, 50% Before Dispatch',
           sampleAvailability: 'Available within 5 working days',
         },
-      }).catch(() => {});
+      });
 
       setNotification('Commercial quote submitted successfully. Brand notified.');
       setSelectedRequest(null);
+      await loadRequests();
     } catch (err: any) {
       setNotification(err.message || 'Failed to submit quote');
     } finally {
@@ -86,6 +113,26 @@ export default function FactoryQuotesPage() {
           </p>
         </div>
 
+        {/* RBAC Notice if user is not FACTORY */}
+        {currentUser && currentUser.role !== Role.FACTORY && (
+          <div className="p-5 rounded-3xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs space-y-3">
+            <div className="flex items-center gap-2 font-bold text-amber-950">
+              <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+              <span>Restricted Access: Factory Role Required</span>
+            </div>
+            <p className="text-amber-800 leading-relaxed">
+              You are currently authenticated as <strong>{currentUser.email || currentUser.role}</strong> ({currentUser.role}). Incoming RFQ bids can only be viewed and submitted by accredited manufacturing facilities.
+            </p>
+            <button
+              onClick={handleSwitchToFactory}
+              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold transition flex items-center gap-2 min-h-[44px]"
+            >
+              <span>Switch to Verified Factory (Apex Foodtech)</span>
+              <ArrowRight className="w-3.5 h-3.5 text-lime-400" />
+            </button>
+          </div>
+        )}
+
         {notification && (
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -101,41 +148,76 @@ export default function FactoryQuotesPage() {
             </span>
           </div>
 
-          <div className="divide-y divide-slate-100">
-            {requests.map((req) => (
-              <div
-                key={req.id}
-                className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
-              >
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-accent-700 bg-accent-100 px-2 py-0.5 rounded-full">
-                    {req.status}
-                  </span>
-                  <h3 className="text-base font-bold text-slate-900">{req.productName}</h3>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                    <span>Batch: {req.quantityUnits?.toLocaleString('en-IN')} units</span>
-                    <span>•</span>
-                    <span>Format: {req.packagingType}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1 text-slate-400">
-                      <Clock className="w-3.5 h-3.5" />
-                      Expires in 5 days
-                    </span>
-                  </div>
-                </div>
+          {loading ? (
+            <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+              Loading factory RFQs...
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <Building2 className="w-10 h-10 text-slate-300 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-800">No pending quotation requests</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                When D2C brands submit briefs matching your verified plant line, RFQ assignments will appear here for bidding.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {requests.map((req) => {
+                const brief = req.brief || {};
+                const productName = brief.productName || 'Contract Production Batch';
+                const quantityUnits = brief.quantityUnits || 0;
+                const packaging = brief.requirementsJson?.packagingType || 'Standard Flow Wrap';
+                const hasSubmitted = req.quotes && req.quotes.length > 0;
 
-                <div>
-                  <button
-                    onClick={() => setSelectedRequest(req)}
-                    className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 min-h-[44px]"
+                return (
+                  <div
+                    key={req.id}
+                    className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
                   >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Submit Quote</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                          {req.status}
+                        </span>
+                        {hasSubmitted && (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                            Quote Submitted ({req.quotes[0].status})
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900">{productName}</h3>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                        <span>Batch: {quantityUnits.toLocaleString('en-IN')} units</span>
+                        <span>•</span>
+                        <span>Packaging: {packaging}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-slate-400">
+                          <Clock className="w-3.5 h-3.5" />
+                          Target: {brief.timelineWeeks || 4} Weeks
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <button
+                        onClick={() =>
+                          setSelectedRequest({
+                            ...req,
+                            productName,
+                            quantityUnits,
+                          })
+                        }
+                        className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-2 min-h-[44px]"
+                      >
+                        <Send className="w-3.5 h-3.5 text-lime-400" />
+                        <span>{hasSubmitted ? 'Revise Quote' : 'Submit Commercial Quote'}</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Modal: Quote Submission */}

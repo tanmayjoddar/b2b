@@ -14,12 +14,14 @@ import {
 import { AppLayout } from '../../../components/layout/AppLayout';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { api } from '../../../lib/api/client';
+import { Role } from '@factorymatch/shared';
 
 export default function AdminAuditPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [entityType, setEntityType] = useState('');
   const [actorUserId, setActorUserId] = useState('');
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -38,8 +40,24 @@ export default function AdminAuditPage() {
   };
 
   useEffect(() => {
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('fm_user') : null;
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+      } catch {}
+    }
     fetchLogs();
   }, []);
+
+  const handleSwitchToAdmin = async () => {
+    try {
+      const res = await api.loginWithPassword({ email: 'admin@factorymatch.in', password: 'Admin@123456' });
+      setCurrentUser(res.user);
+      await fetchLogs();
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
 
   return (
     <AppLayout
@@ -49,6 +67,25 @@ export default function AdminAuditPage() {
       subtitle="Append-only cryptographic event history for tenant isolation, state transitions, and accreditations."
     >
       <div className="space-y-6">
+        {/* RBAC Notice if user is not ADMIN */}
+        {currentUser && currentUser.role !== Role.ADMIN && (
+          <div className="p-5 rounded-3xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs space-y-3">
+            <div className="flex items-center gap-2 font-bold text-amber-950">
+              <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+              <span>Restricted Operations: Administrator Privilege Required</span>
+            </div>
+            <p className="text-amber-800 leading-relaxed">
+              You are currently authenticated as <strong>{currentUser.email || currentUser.role}</strong> ({currentUser.role}). Viewing system audit logs and compliance trails requires Platform Admin role.
+            </p>
+            <button
+              onClick={handleSwitchToAdmin}
+              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold transition flex items-center gap-2 min-h-[44px]"
+            >
+              <span>Switch to Admin Operator (admin@factorymatch.in)</span>
+            </button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center gap-4 justify-between">
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">

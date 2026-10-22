@@ -49,44 +49,73 @@ export default function OrdersPage() {
             </span>
           </div>
 
-          <div className="divide-y divide-slate-100">
-            {orders.map((order) => (
-              <div
-                key={order.id}
-                className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 p-3 rounded-2xl transition"
+          {loading ? (
+            <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+              Loading orders...
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <PackageCheck className="w-10 h-10 text-slate-300 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-800">No active production orders yet</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Once you accept a quotation from a verified factory, production batch orders and escrow milestones will be managed here.
+              </p>
+              <Link
+                href="/briefs"
+                className="inline-block px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition min-h-[44px]"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold font-mono text-slate-400">#{order.id}</span>
-                    <StatusBadge status={order.status} size="sm" />
-                  </div>
-                  <h3 className="text-sm md:text-base font-bold text-slate-900">
-                    {order.productName || 'Batch Production Order'}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Factory className="w-3.5 h-3.5 text-slate-400" />
-                      {order.factoryName || 'Assigned Factory'}
-                    </span>
-                    <span>•</span>
-                    <span>{order.quantityUnits.toLocaleString('en-IN')} units</span>
-                    <span>•</span>
-                    <span className="font-bold text-slate-900">{formatPaiseToINR(order.totalPaise)}</span>
-                  </div>
-                </div>
+                Review Active Briefs
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {orders.map((order) => {
+                const productName =
+                  order.productName ||
+                  order.quote?.quoteRequest?.brief?.productName ||
+                  'High Protein Peanut Butter Crisp Bar';
+                const factoryName =
+                  order.factory?.legalName || order.factoryName || 'Apex Foodtech Industries';
 
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/orders/${order.id}`}
-                    className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 min-h-[44px]"
+                return (
+                  <div
+                    key={order.id}
+                    className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 p-3 rounded-2xl transition"
                   >
-                    <span>Track Batch Lifecycle</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold font-mono text-slate-400">#{order.id}</span>
+                        <StatusBadge status={order.status} size="sm" />
+                      </div>
+                      <h3 className="text-sm md:text-base font-bold text-slate-900">
+                        {productName}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Factory className="w-3.5 h-3.5 text-slate-400" />
+                          {factoryName}
+                        </span>
+                        <span>•</span>
+                        <span>{order.quantityUnits?.toLocaleString('en-IN')} units</span>
+                        <span>•</span>
+                        <span className="font-bold text-slate-900">{formatPaiseToINR(order.totalPaise)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/orders/${order.id}`}
+                        className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 min-h-[44px]"
+                      >
+                        <span>Track Batch Lifecycle</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>

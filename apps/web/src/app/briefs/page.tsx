@@ -57,39 +57,59 @@ export default function BriefsListPage() {
             </span>
           </div>
 
-          <div className="divide-y divide-slate-100">
-            {briefs.map((brief) => (
-              <div
-                key={brief.id}
-                className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 p-3 rounded-2xl transition"
+          {loading ? (
+            <div className="py-12 text-center text-xs text-slate-400 font-semibold">
+              Loading manufacturing briefs...
+            </div>
+          ) : briefs.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <FileSpreadsheet className="w-10 h-10 text-slate-300 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-800">No manufacturing briefs submitted yet</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Submit a structured formulation brief to receive 3–5 audited factory quotations within 48 hours.
+              </p>
+              <Link
+                href="/briefs/new"
+                className="inline-block px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition min-h-[44px]"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-slate-400">#{brief.id}</span>
-                    <StatusBadge status={brief.status} size="sm" />
+                Create First Brief
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {briefs.map((brief) => (
+                <div
+                  key={brief.id}
+                  className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 p-3 rounded-2xl transition"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-slate-400">#{brief.id}</span>
+                      <StatusBadge status={brief.status} size="sm" />
+                    </div>
+                    <h3 className="text-sm md:text-base font-bold text-slate-900">
+                      {brief.productName}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                      <span>Target Volume: {brief.quantityUnits?.toLocaleString('en-IN')} units</span>
+                      <span>•</span>
+                      <span>Lead Target: {brief.timelineWeeks || 4} weeks</span>
+                    </div>
                   </div>
-                  <h3 className="text-sm md:text-base font-bold text-slate-900">
-                    {brief.productName}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                    <span>Target Volume: {brief.quantityUnits.toLocaleString('en-IN')} units</span>
-                    <span>•</span>
-                    <span>Lead Target: {brief.timelineWeeks} weeks</span>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/briefs/${brief.id}/quotes`}
-                    className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 min-h-[44px]"
-                  >
-                    <span>View Quotes Matrix</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/briefs/${brief.id}/quotes`}
+                      className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 min-h-[44px]"
+                    >
+                      <span>View Quotes Matrix</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
