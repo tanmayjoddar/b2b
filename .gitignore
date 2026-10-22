@@ -13,3 +13,4 @@ out
 coverage
 .DS_Store
 *.pem
+*.tsbuildinfo

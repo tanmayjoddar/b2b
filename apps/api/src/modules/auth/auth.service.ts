@@ -108,7 +108,7 @@ export class AuthService {
 
     // In production this enqueues WhatsApp/SMS delivery.
     // In development/test mode, we provide it in response for deterministic testing.
-    const isDev = this.config.get<string>('NODE_ENV') !== 'production';
+    const isDev = (this.config?.get<string>('NODE_ENV') || process.env.NODE_ENV) !== 'production';
     return {
       message: 'OTP sent successfully',
       debugOtp: isDev ? otp : undefined,

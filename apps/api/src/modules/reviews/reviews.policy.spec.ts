@@ -1,23 +1,32 @@
 import { describe, it, expect } from 'vitest';
 import { canCreateReview } from './reviews.policy.js';
-import { AuthUser, OrderStatus } from '@factorymatch/shared';
+import { AuthUser, OrderStatus, Role, UserStatus } from '@factorymatch/shared';
 
 describe('Reviews Policy', () => {
   const brandUser: AuthUser = {
     id: 'user-b1',
-    role: 'BRAND',
+    email: 'b1@example.com',
+    phone: null,
+    role: Role.BRAND,
+    status: UserStatus.ACTIVE,
     brandId: 'brand-1',
   };
 
   const otherBrandUser: AuthUser = {
     id: 'user-b2',
-    role: 'BRAND',
+    email: 'b2@example.com',
+    phone: null,
+    role: Role.BRAND,
+    status: UserStatus.ACTIVE,
     brandId: 'brand-2',
   };
 
   const factoryUser: AuthUser = {
     id: 'user-f1',
-    role: 'FACTORY',
+    email: null,
+    phone: '+919876543210',
+    role: Role.FACTORY,
+    status: UserStatus.ACTIVE,
     factoryId: 'factory-1',
   };
 

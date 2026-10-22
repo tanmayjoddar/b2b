@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ReviewsService } from './reviews.service.js';
 import { ReviewsRepository } from './reviews.repository.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
-import { AuthUser, OrderStatus } from '@factorymatch/shared';
+import { AuthUser, OrderStatus, Role, UserStatus } from '@factorymatch/shared';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 
 describe('ReviewsService', () => {
@@ -12,7 +12,10 @@ describe('ReviewsService', () => {
 
   const mockBrandUser: AuthUser = {
     id: 'usr-brand-1',
-    role: 'BRAND',
+    email: 'brand1@example.com',
+    phone: null,
+    role: Role.BRAND,
+    status: UserStatus.ACTIVE,
     brandId: 'brand-1',
   };
 
