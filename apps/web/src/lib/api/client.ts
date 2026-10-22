@@ -59,12 +59,18 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const resJson = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    const error = resJson.error || {};
+    const errorObj = typeof resJson.error === 'object' && resJson.error !== null ? resJson.error : {};
+    const rawMsg =
+      resJson.message ||
+      errorObj.message ||
+      (typeof resJson.error === 'string' ? resJson.error : null) ||
+      'An unexpected error occurred';
+    const message = Array.isArray(rawMsg) ? rawMsg.join(', ') : String(rawMsg);
     throw new ApiError(
-      error.code || 'UNKNOWN_ERROR',
-      error.message || 'An unexpected error occurred',
+      errorObj.code || (typeof resJson.error === 'string' ? resJson.error : 'ERROR'),
+      message,
       response.status,
-      error.details,
+      errorObj.details,
     );
   }
 
