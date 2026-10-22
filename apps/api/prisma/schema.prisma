@@ -1,0 +1,486 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  BRAND
+  FACTORY
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum FactoryStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum VerificationTier {
+  TIER_1_DOCUMENTS
+  TIER_2_VIDEO
+  TIER_3_ORDER_PROVEN
+  TIER_4_INSPECTED
+}
+
+enum VerificationMethod {
+  PAPER
+  VIDEO
+  ORDER
+  INSPECTION
+}
+
+enum CertificateType {
+  FSSAI
+  GST
+  UDYAM
+  ISO
+  GMP
+  HACCP
+  OTHER
+}
+
+enum CertificateStatus {
+  SUBMITTED
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum BriefStatus {
+  DRAFT
+  SUBMITTED
+  MATCHING
+  SHORTLISTED
+  QUOTING
+  CLOSED
+  CANCELLED
+}
+
+enum QuoteRequestStatus {
+  REQUESTED
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum QuoteStatus {
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum SampleStatus {
+  REQUESTED
+  DISPATCHED
+  RECEIVED
+  APPROVED
+  REJECTED
+}
+
+enum OrderStatus {
+  CONFIRMED
+  SAMPLE_APPROVED
+  ADVANCE_PAID
+  IN_PRODUCTION
+  READY
+  INSPECTED
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum PaymentMilestone {
+  ADVANCE
+  BALANCE
+  INSPECTION
+}
+
+enum PaymentStatus {
+  PENDING
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String      @id @default(uuid())
+  email         String?     @unique
+  phone         String?     @unique
+  passwordHash  String?     @map("password_hash")
+  role          Role
+  status        UserStatus  @default(ACTIVE)
+  lastLoginAt   DateTime?   @map("last_login_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
+
+  brand         Brand?
+  factories     Factory[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  tokenHash  String    @unique @map("token_hash")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Brand {
+  id          String    @id @default(uuid())
+  userId      String    @unique @map("user_id")
+  companyName String    @map("company_name")
+  gstNo       String?   @map("gst_no")
+  website     String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  briefs      Brief[]
+  orders      Order[]
+  reviews     Review[]
+
+  @@map("brands")
+}
+
+model Factory {
+  id               String            @id @default(uuid())
+  ownerUserId      String            @map("owner_user_id")
+  legalName        String            @map("legal_name")
+  city             String
+  state            String
+  pincode          String
+  lat              Float?
+  lng              Float?
+  tier             VerificationTier  @default(TIER_1_DOCUMENTS)
+  status           FactoryStatus     @default(PENDING)
+  capacityNotes    String?           @map("capacity_notes")
+  leadTimeDaysMin  Int?              @map("lead_time_days_min")
+  leadTimeDaysMax  Int?              @map("lead_time_days_max")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  deletedAt        DateTime?         @map("deleted_at")
+
+  owner            User              @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  verticals        FactoryVertical[]
+  capabilities     FactoryCapability[]
+  certificates     Certificate[]
+  verifications    Verification[]
+  quoteRequests    QuoteRequest[]
+  samples          Sample[]
+  orders           Order[]
+  reviews          Review[]
+  shortlistItems   ShortlistItem[]
+
+  @@index([status, tier])
+  @@index([city, state])
+  @@map("factories")
+}
+
+model Vertical {
+  id                  String             @id @default(uuid())
+  slug                String             @unique
+  name                String
+  attributeSchemaJson Json               @default("{}") @map("attribute_schema_json")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  factories           FactoryVertical[]
+  capabilities        FactoryCapability[]
+  briefs              Brief[]
+
+  @@map("verticals")
+}
+
+model FactoryVertical {
+  factoryId  String   @map("factory_id")
+  verticalId String   @map("vertical_id")
+
+  factory    Factory  @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+  vertical   Vertical @relation(fields: [verticalId], references: [id], onDelete: Cascade)
+
+  @@id([factoryId, verticalId])
+  @@map("factory_verticals")
+}
+
+model FactoryCapability {
+  id                      String    @id @default(uuid())
+  factoryId               String    @map("factory_id")
+  verticalId              String    @map("vertical_id")
+  productType             String    @map("product_type")
+  moqUnits                Int       @map("moq_units")
+  capacityUnitsPerMonth   Int       @map("capacity_units_per_month")
+  packagingOptions        String[]  @map("packaging_options")
+  attributesJson          Json      @default("{}") @map("attributes_json")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  factory                 Factory   @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+  vertical                Vertical  @relation(fields: [verticalId], references: [id], onDelete: Cascade)
+
+  @@index([factoryId])
+  @@map("factory_capabilities")
+}
+
+model Certificate {
+  id          String            @id @default(uuid())
+  factoryId   String            @map("factory_id")
+  type        CertificateType
+  number      String
+  issuer      String
+  validFrom   DateTime          @map("valid_from")
+  validTo     DateTime          @map("valid_to")
+  fileId      String?           @map("file_id")
+  status      CertificateStatus @default(SUBMITTED)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  factory     Factory           @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+
+  @@index([factoryId, status])
+  @@map("certificates")
+}
+
+model Verification {
+  id             String             @id @default(uuid())
+  factoryId      String             @map("factory_id")
+  tier           VerificationTier
+  method         VerificationMethod
+  result         String
+  evidenceFileId String?            @map("evidence_file_id")
+  notes          String?
+  performedBy    String             @map("performed_by")
+  performedAt    DateTime           @default(now()) @map("performed_at")
+  expiresAt      DateTime?          @map("expires_at")
+
+  factory        Factory            @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+
+  @@index([factoryId])
+  @@map("verifications")
+}
+
+model Brief {
+  id                   String        @id @default(uuid())
+  brandId              String        @map("brand_id")
+  verticalId           String        @map("vertical_id")
+  productName          String        @map("product_name")
+  quantityUnits        Int           @map("quantity_units")
+  targetPricePaiseMin  Int?          @map("target_price_paise_min")
+  targetPricePaiseMax  Int?          @map("target_price_paise_max")
+  requirementsJson     Json          @default("{}") @map("requirements_json")
+  timelineWeeks        Int           @map("timeline_weeks")
+  status               BriefStatus   @default(DRAFT)
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+  deletedAt            DateTime?     @map("deleted_at")
+
+  brand                Brand         @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  vertical             Vertical      @relation(fields: [verticalId], references: [id], onDelete: Cascade)
+  shortlists           Shortlist[]
+  quoteRequests        QuoteRequest[]
+  samples              Sample[]
+
+  @@index([brandId, status])
+  @@map("briefs")
+}
+
+model Shortlist {
+  id                 String          @id @default(uuid())
+  briefId            String          @map("brief_id")
+  createdByAdminId   String          @map("created_by_admin_id")
+  createdAt          DateTime        @default(now()) @map("created_at")
+
+  brief              Brief           @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  items              ShortlistItem[]
+
+  @@index([briefId])
+  @@map("shortlists")
+}
+
+model ShortlistItem {
+  id           String     @id @default(uuid())
+  shortlistId  String     @map("shortlist_id")
+  factoryId    String     @map("factory_id")
+  rank         Int        @default(1)
+  adminNote    String?    @map("admin_note")
+
+  shortlist    Shortlist  @relation(fields: [shortlistId], references: [id], onDelete: Cascade)
+  factory      Factory    @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+
+  @@unique([shortlistId, factoryId])
+  @@map("shortlist_items")
+}
+
+model QuoteRequest {
+  id         String             @id @default(uuid())
+  briefId    String             @map("brief_id")
+  factoryId  String             @map("factory_id")
+  status     QuoteRequestStatus @default(REQUESTED)
+  expiresAt  DateTime           @map("expires_at")
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+
+  brief      Brief              @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  factory    Factory            @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+  quotes     Quote[]
+
+  @@unique([briefId, factoryId])
+  @@map("quote_requests")
+}
+
+model Quote {
+  id                String        @id @default(uuid())
+  quoteRequestId    String        @map("quote_request_id")
+  pricePaisePerUnit Int           @map("price_paise_per_unit")
+  moqUnits          Int           @map("moq_units")
+  leadTimeDays      Int           @map("lead_time_days")
+  validUntil        DateTime      @map("valid_until")
+  termsJson         Json          @default("{}") @map("terms_json")
+  status            QuoteStatus   @default(SUBMITTED)
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  quoteRequest      QuoteRequest  @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  orders            Order[]
+
+  @@index([quoteRequestId])
+  @@map("quotes")
+}
+
+model Sample {
+  id             String        @id @default(uuid())
+  briefId        String        @map("brief_id")
+  factoryId      String        @map("factory_id")
+  status         SampleStatus  @default(REQUESTED)
+  trackingRef    String?       @map("tracking_ref")
+  brandFeedback  String?       @map("brand_feedback")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  brief          Brief         @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  factory        Factory       @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+
+  @@index([briefId, factoryId])
+  @@map("samples")
+}
+
+model Order {
+  id            String         @id @default(uuid())
+  brandId       String         @map("brand_id")
+  factoryId     String         @map("factory_id")
+  quoteId       String         @map("quote_id")
+  status        OrderStatus    @default(CONFIRMED)
+  totalPaise    Int            @map("total_paise")
+  quantityUnits Int            @map("quantity_units")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  brand         Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  factory       Factory        @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+  quote         Quote          @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  events        OrderEvent[]
+  payments      Payment[]
+  reviews       Review[]
+
+  @@index([brandId, status])
+  @@index([factoryId, status])
+  @@map("orders")
+}
+
+model OrderEvent {
+  id          String       @id @default(uuid())
+  orderId     String       @map("order_id")
+  fromStatus  OrderStatus  @map("from_status")
+  toStatus    OrderStatus  @map("to_status")
+  actorUserId String       @map("actor_user_id")
+  reason      String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_events")
+}
+
+model Payment {
+  id               String            @id @default(uuid())
+  orderId          String            @map("order_id")
+  milestone        PaymentMilestone
+  amountPaise      Int               @map("amount_paise")
+  status           PaymentStatus     @default(PENDING)
+  razorpayOrderId  String            @map("razorpay_order_id")
+  razorpayPaymentId String?          @map("razorpay_payment_id")
+  idempotencyKey   String            @unique @map("idempotency_key")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, milestone])
+  @@map("payments")
+}
+
+model Review {
+  id                String    @id @default(uuid())
+  orderId           String    @unique @map("order_id")
+  brandId           String    @map("brand_id")
+  factoryId         String    @map("factory_id")
+  onTimeRating      Int       @map("on_time_rating")
+  qualityRating     Int       @map("quality_rating")
+  communicationRating Int     @map("communication_rating")
+  comment           String?
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  brand             Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  factory           Factory   @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+
+  @@index([factoryId])
+  @@map("reviews")
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  actorUserId String?   @map("actor_user_id")
+  action      String
+  entityType  String    @map("entity_type")
+  entityId    String    @map("entity_id")
+  beforeJson  Json?     @map("before_json")
+  afterJson   Json?     @map("after_json")
+  ip          String?
+  userAgent   String?   @map("user_agent")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  actor       User?     @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@map("audit_logs")
+}

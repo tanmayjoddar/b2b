@@ -1,0 +1,116 @@
+export enum Role {
+  BRAND = 'BRAND',
+  FACTORY = 'FACTORY',
+  ADMIN = 'ADMIN',
+}
+
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  PENDING_VERIFICATION = 'PENDING_VERIFICATION',
+}
+
+export enum FactoryStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+}
+
+export enum VerificationTier {
+  TIER_1_DOCUMENTS = 'TIER_1_DOCUMENTS',
+  TIER_2_VIDEO = 'TIER_2_VIDEO',
+  TIER_3_ORDER_PROVEN = 'TIER_3_ORDER_PROVEN',
+  TIER_4_INSPECTED = 'TIER_4_INSPECTED',
+}
+
+export enum VerificationMethod {
+  PAPER = 'PAPER',
+  VIDEO = 'VIDEO',
+  ORDER = 'ORDER',
+  INSPECTION = 'INSPECTION',
+}
+
+export enum VerificationResult {
+  PASSED = 'PASSED',
+  FAILED = 'FAILED',
+  REQUIRES_CLARIFICATION = 'REQUIRES_CLARIFICATION',
+}
+
+export enum CertificateType {
+  FSSAI = 'FSSAI',
+  GST = 'GST',
+  UDYAM = 'UDYAM',
+  ISO = 'ISO',
+  GMP = 'GMP',
+  HACCP = 'HACCP',
+  OTHER = 'OTHER',
+}
+
+export enum CertificateStatus {
+  SUBMITTED = 'SUBMITTED',
+  VERIFIED = 'VERIFIED',
+  REJECTED = 'REJECTED',
+  EXPIRED = 'EXPIRED',
+}
+
+export enum BriefStatus {
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  MATCHING = 'MATCHING',
+  SHORTLISTED = 'SHORTLISTED',
+  QUOTING = 'QUOTING',
+  CLOSED = 'CLOSED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum QuoteRequestStatus {
+  REQUESTED = 'REQUESTED',
+  SUBMITTED = 'SUBMITTED',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
+  EXPIRED = 'EXPIRED',
+  WITHDRAWN = 'WITHDRAWN',
+}
+
+export enum QuoteStatus {
+  SUBMITTED = 'SUBMITTED',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
+  EXPIRED = 'EXPIRED',
+  WITHDRAWN = 'WITHDRAWN',
+}
+
+export enum SampleStatus {
+  REQUESTED = 'REQUESTED',
+  DISPATCHED = 'DISPATCHED',
+  RECEIVED = 'RECEIVED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+export enum OrderStatus {
+  CONFIRMED = 'CONFIRMED',
+  SAMPLE_APPROVED = 'SAMPLE_APPROVED',
+  ADVANCE_PAID = 'ADVANCE_PAID',
+  IN_PRODUCTION = 'IN_PRODUCTION',
+  READY = 'READY',
+  INSPECTED = 'INSPECTED',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  DISPUTED = 'DISPUTED',
+}
+
+export enum PaymentMilestone {
+  ADVANCE = 'ADVANCE',
+  BALANCE = 'BALANCE',
+  INSPECTION = 'INSPECTION',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  CAPTURED = 'CAPTURED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+}

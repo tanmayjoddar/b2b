@@ -1,0 +1,18 @@
+{
+  "name": "factorymatch-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@8.15.0",
+  "scripts": {
+    "build": "pnpm --filter \"@factorymatch/*\" build",
+    "lint": "pnpm --filter \"@factorymatch/*\" lint",
+    "typecheck": "pnpm --filter \"@factorymatch/*\" typecheck",
+    "test": "pnpm --filter \"@factorymatch/*\" test",
+    "dev:api": "pnpm --filter @factorymatch/api dev",
+    "dev:web": "pnpm --filter @factorymatch/web dev"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
+}
