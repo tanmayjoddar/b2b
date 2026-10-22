@@ -27,7 +27,8 @@ export default function FactoriesPage() {
     async function loadFactories() {
       try {
         const data = await api.listFactories();
-        setFactories(data || []);
+        const list = Array.isArray(data) ? data : (data as any)?.items || [];
+        setFactories(list);
       } catch {
         setFactories([]);
       }

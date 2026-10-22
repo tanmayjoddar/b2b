@@ -31,9 +31,9 @@ export default function DashboardPage() {
           api.listOrders(),
           api.listFactories(),
         ]);
-        setBriefs(briefsData || []);
-        setOrders(ordersData || []);
-        setFactories(factoriesData || []);
+        setBriefs(Array.isArray(briefsData) ? briefsData : (briefsData as any)?.items || []);
+        setOrders(Array.isArray(ordersData) ? ordersData : (ordersData as any)?.items || []);
+        setFactories(Array.isArray(factoriesData) ? factoriesData : (factoriesData as any)?.items || []);
       } catch {
         setBriefs([]);
         setOrders([]);

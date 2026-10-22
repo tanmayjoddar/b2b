@@ -42,7 +42,8 @@ export default function AdminVerificationPage() {
     setLoading(true);
     try {
       const data = await api.listFactories();
-      setFactories(data || []);
+      const list = Array.isArray(data) ? data : (data as any)?.items || [];
+      setFactories(list);
     } catch {
       setFactories([]);
     } finally {

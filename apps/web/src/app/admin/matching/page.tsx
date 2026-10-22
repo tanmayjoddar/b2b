@@ -32,8 +32,8 @@ export default function AdminMatchingPage() {
         api.listBriefs(),
         api.listFactories(),
       ]);
-      setBriefs(briefsData || []);
-      setFactories(factoriesData || []);
+      setBriefs(Array.isArray(briefsData) ? briefsData : (briefsData as any)?.items || []);
+      setFactories(Array.isArray(factoriesData) ? factoriesData : (factoriesData as any)?.items || []);
     } catch {
       setBriefs([]);
       setFactories([]);

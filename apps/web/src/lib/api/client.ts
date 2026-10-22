@@ -208,7 +208,10 @@ export const api = {
   },
 
   async listFactories() {
-    return request<any[]>('/factories');
+    const res = await request<any>('/factories');
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res.items)) return res.items;
+    return [];
   },
 
   async getFactory(id: string) {
