@@ -9,9 +9,9 @@ async function main() {
   // 1. Launch Vertical
   const vertical = await prisma.vertical.upsert({
     where: { slug: 'snacks-nutrition' },
-    update: {},
+    update: { id: 'vertical-snacks-nutrition' },
     create: {
-      id: 'snack-nutrition-v1',
+      id: 'vertical-snacks-nutrition',
       name: 'Snacks & Nutrition',
       slug: 'snacks-nutrition',
       attributeSchemaJson: {

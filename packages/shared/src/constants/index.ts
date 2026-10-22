@@ -17,7 +17,7 @@ export const OTP_EXPIRY_SECONDS = 5 * 60; // 5 minutes
 export const OTP_MAX_ATTEMPTS = 5;
 
 export const LAUNCH_VERTICAL = {
-  id: 'snack-nutrition-v1',
+  id: 'vertical-snacks-nutrition',
   slug: 'snacks-nutrition',
   name: 'Snacks & Nutrition',
   description: 'Protein chips, nutritional bars, roasted seeds & granola',
