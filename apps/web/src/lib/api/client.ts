@@ -19,6 +19,8 @@ import {
   TransitionSampleDto,
   CreatePaymentDto,
   VerifyPaymentSignatureDto,
+  CreateReviewDto,
+  AuditLogQueryDto,
 } from '@factorymatch/shared';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -306,5 +308,29 @@ export const api = {
 
   async getPaymentsForOrder(orderId: string) {
     return request<any[]>(`/orders/${orderId}/payments`);
+  },
+
+  // ── Reviews ──
+  async createReview(dto: CreateReviewDto) {
+    return request<any>('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  },
+
+  async getFactoryReviews(factoryId: string, limit = 20, offset = 0) {
+    return request<any[]>(`/factories/${factoryId}/reviews?limit=${limit}&offset=${offset}`);
+  },
+
+  // ── Audit Logs ──
+  async getAuditLogs(query?: Partial<AuditLogQueryDto>) {
+    const params = new URLSearchParams();
+    if (query?.actorUserId) params.set('actorUserId', query.actorUserId);
+    if (query?.entityType) params.set('entityType', query.entityType);
+    if (query?.entityId) params.set('entityId', query.entityId);
+    if (query?.limit) params.set('limit', String(query.limit));
+    if (query?.offset) params.set('offset', String(query.offset));
+    const qs = params.toString();
+    return request<any>(`/admin/audit-logs${qs ? `?${qs}` : ''}`);
   },
 };

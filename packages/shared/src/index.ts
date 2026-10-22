@@ -8,3 +8,4 @@ export * from './schemas/brief.schema.js';
 export * from './schemas/quote.schema.js';
 export * from './schemas/order.schema.js';
 export * from './schemas/payment.schema.js';
+export * from './schemas/review.schema.js';

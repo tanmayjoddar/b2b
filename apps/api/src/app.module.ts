@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validateEnv } from './config/env.schema.js';
 import { PrismaModule } from './infra/prisma/prisma.module.js';
 import { RazorpayModule } from './infra/razorpay/razorpay.module.js';
@@ -13,6 +15,8 @@ import { QuotesModule } from './modules/quotes/quotes.module.js';
 import { OrdersModule } from './modules/orders/orders.module.js';
 import { SamplesModule } from './modules/samples/samples.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
+import { ReviewsModule } from './modules/reviews/reviews.module.js';
+import { AuditModule } from './modules/audit/audit.module.js';
 
 @Module({
   imports: [
@@ -20,6 +24,12 @@ import { PaymentsModule } from './modules/payments/payments.module.js';
       isGlobal: true,
       validate: validateEnv,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     PrismaModule,
     RazorpayModule,
     HealthModule,
@@ -32,6 +42,14 @@ import { PaymentsModule } from './modules/payments/payments.module.js';
     OrdersModule,
     SamplesModule,
     PaymentsModule,
+    ReviewsModule,
+    AuditModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

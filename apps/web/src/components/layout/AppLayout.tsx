@@ -13,12 +13,17 @@ import {
   ChevronDown,
   Layers,
   CheckCircle2,
+  History,
 } from 'lucide-react';
 import { Role } from '@factorymatch/shared';
 import { api } from '../../lib/api/client';
 
 interface AppLayoutProps {
   children: React.ReactNode;
+  role?: string;
+  activePath?: string;
+  title?: string;
+  subtitle?: string;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -71,7 +76,11 @@ export function AppLayout({ children }: AppLayoutProps) {
     { label: 'Factories', href: '/factories', icon: Building2 },
     { label: 'Orders', href: '/orders', icon: PackageCheck },
     ...(currentUser?.role === Role.ADMIN
-      ? [{ label: 'Verification', href: '/admin/verification', icon: ShieldCheck }]
+      ? [
+          { label: 'Verification', href: '/admin/verification', icon: ShieldCheck },
+          { label: 'Matching', href: '/admin/matching', icon: Layers },
+          { label: 'Audit Trail', href: '/admin/audit', icon: History },
+        ]
       : []),
     ...(currentUser?.role === Role.FACTORY
       ? [{ label: 'Factory Quotes', href: '/factory/quotes', icon: Building2 }]
