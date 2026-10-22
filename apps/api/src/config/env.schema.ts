@@ -9,6 +9,9 @@ export const EnvSchema = z.object({
   COOKIE_SECRET: z.string().min(16).default('development-cookie-secret-min-16-chars'),
   JWT_ACCESS_SECRET: z.string().min(16).default('development-jwt-access-secret-min-16-chars'),
   JWT_REFRESH_SECRET: z.string().min(16).default('development-jwt-refresh-secret-min-16-chars'),
+  RAZORPAY_KEY_ID: z.string().default('rzp_test_placeholder'),
+  RAZORPAY_KEY_SECRET: z.string().default('rzp_test_secret_placeholder'),
+  RAZORPAY_WEBHOOK_SECRET: z.string().default('rzp_webhook_secret_placeholder'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
