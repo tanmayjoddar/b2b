@@ -17,13 +17,21 @@ import { AppLayout } from '../../components/layout/AppLayout';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { TrustBadgeCard } from '../../components/ui/TrustBadgeCard';
 import { api } from '../../lib/api/client';
-import { VerificationTier } from '@factorymatch/shared';
+import { VerificationTier, Role } from '@factorymatch/shared';
 
 export default function FactoriesPage() {
   const [factories, setFactories] = useState<any[]>([]);
   const [selectedFactory, setSelectedFactory] = useState<any | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('fm_user') : null;
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+      } catch {}
+    }
+
     async function loadFactories() {
       try {
         const data = await api.listFactories();
@@ -50,12 +58,14 @@ export default function FactoriesPage() {
             </p>
           </div>
 
-          <Link
-            href="/briefs/new"
-            className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition min-h-[44px] flex items-center justify-center"
-          >
-            Request Factory Shortlist
-          </Link>
+          {currentUser?.role === Role.BRAND && (
+            <Link
+              href="/briefs/new"
+              className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition min-h-[44px] flex items-center justify-center"
+            >
+              Request Factory Shortlist
+            </Link>
+          )}
         </div>
 
         {/* Factories Grid */}
@@ -109,12 +119,14 @@ export default function FactoriesPage() {
                   <span>View Verification Audit</span>
                 </button>
 
-                <Link
-                  href="/briefs/new"
-                  className="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition min-h-[44px] flex items-center"
-                >
-                  Quote Brief →
-                </Link>
+                {currentUser?.role === Role.BRAND && (
+                  <Link
+                    href="/briefs/new"
+                    className="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition min-h-[44px] flex items-center"
+                  >
+                    Quote Brief →
+                  </Link>
+                )}
               </div>
             </div>
           ))}

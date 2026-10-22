@@ -55,17 +55,6 @@ export default function FactoryQuotesPage() {
     loadRequests();
   }, []);
 
-  const handleSwitchToFactory = async () => {
-    try {
-      const otpRes = await api.requestOtp({ phone: '+919876543210' });
-      const res = await api.verifyOtp({ phone: '+919876543210', otp: otpRes.debugOtp || '123456' });
-      setCurrentUser(res.user);
-      await loadRequests();
-    } catch (err: any) {
-      setNotification(err.message || 'Failed to switch to factory account');
-    }
-  };
-
   const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRequest) return;
@@ -113,25 +102,7 @@ export default function FactoryQuotesPage() {
           </p>
         </div>
 
-        {/* RBAC Notice if user is not FACTORY */}
-        {currentUser && currentUser.role !== Role.FACTORY && (
-          <div className="p-5 rounded-3xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs space-y-3">
-            <div className="flex items-center gap-2 font-bold text-amber-950">
-              <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
-              <span>Restricted Access: Factory Role Required</span>
-            </div>
-            <p className="text-amber-800 leading-relaxed">
-              You are currently authenticated as <strong>{currentUser.email || currentUser.role}</strong> ({currentUser.role}). Incoming RFQ bids can only be viewed and submitted by accredited manufacturing facilities.
-            </p>
-            <button
-              onClick={handleSwitchToFactory}
-              className="px-4 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold transition flex items-center gap-2 min-h-[44px]"
-            >
-              <span>Switch to Verified Factory (Apex Foodtech)</span>
-              <ArrowRight className="w-3.5 h-3.5 text-lime-400" />
-            </button>
-          </div>
-        )}
+
 
         {notification && (
           <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">

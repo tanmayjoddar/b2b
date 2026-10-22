@@ -72,7 +72,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         { label: 'Matching', href: '/admin/matching', icon: Layers },
         { label: 'Audit Trail', href: '/admin/audit', icon: History },
         { label: 'Batch Orders', href: '/orders', icon: PackageCheck },
-        { label: 'Factories', href: '/factories', icon: Building2 },
       ];
     }
     if (currentUser?.role === Role.FACTORY) {
@@ -80,7 +79,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         { label: 'Incoming RFQs', href: '/factory/quotes', icon: FileSpreadsheet },
         { label: 'Batch Orders', href: '/orders', icon: PackageCheck },
         { label: 'Plant Profile', href: '/factory/onboard', icon: Building2 },
-        { label: 'Directory', href: '/factories', icon: Layers },
       ];
     }
     return [
