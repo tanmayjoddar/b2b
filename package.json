@@ -8,6 +8,7 @@
     "lint": "pnpm --filter \"@factorymatch/*\" lint",
     "typecheck": "pnpm --filter \"@factorymatch/*\" typecheck",
     "test": "pnpm --filter \"@factorymatch/*\" test",
+    "dev": "pnpm --parallel --filter \"@factorymatch/api\" --filter \"@factorymatch/web\" dev",
     "dev:api": "pnpm --filter @factorymatch/api dev",
     "dev:web": "pnpm --filter @factorymatch/web dev"
   },
