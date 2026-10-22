@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Clock, ShieldCheck, Check, AlertTriangle, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock, ShieldCheck, Check } from 'lucide-react';
 import { AppLayout } from '../../../components/layout/AppLayout';
 import { Stepper, Step } from '../../../components/ui/Stepper';
 import { api } from '../../../lib/api/client';
@@ -18,7 +18,6 @@ const WIZARD_STEPS: Step[] = [
 export default function NewBriefPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [switchingRole, setSwitchingRole] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,19 +32,6 @@ export default function NewBriefPage() {
       }
     }
   }, []);
-
-  const handleSwitchToBrand = async () => {
-    setSwitchingRole(true);
-    setError(null);
-    try {
-      const res = await api.loginWithPassword({ email: 'founder@proteinbites.in', password: 'Brand@123456' });
-      setCurrentUser(res.user);
-    } catch (err: any) {
-      setError(err.message || 'Failed to switch to Brand persona');
-    } finally {
-      setSwitchingRole(false);
-    }
-  };
 
   // Form State
   const [formData, setFormData] = useState({
@@ -139,29 +125,6 @@ export default function NewBriefPage() {
           {/* Form Step Body */}
           <div className="md:col-span-2 bg-white rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-card flex flex-col justify-between min-h-[460px]">
             <div>
-              {currentUser && currentUser.role !== Role.BRAND && (
-                <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-                    <div>
-                      <p className="font-bold">Active Role: {currentUser.email} ({currentUser.role})</p>
-                      <p className="text-amber-700 mt-0.5">
-                        Only Brand Founder accounts have permission to create production briefs.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleSwitchToBrand}
-                    disabled={switchingRole}
-                    className="shrink-0 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 transition min-h-[44px] disabled:opacity-50"
-                  >
-                    <ArrowRightLeft className="w-3.5 h-3.5" />
-                    <span>{switchingRole ? 'Switching...' : 'Switch to Brand Founder'}</span>
-                  </button>
-                </div>
-              )}
-
               {error && (
                 <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
                   {error}
