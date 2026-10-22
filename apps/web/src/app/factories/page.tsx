@@ -25,62 +25,11 @@ export default function FactoriesPage() {
 
   useEffect(() => {
     async function loadFactories() {
-      const data = await api.listFactories().catch(() => []);
-      if (!data || data.length === 0) {
-        setFactories([
-          {
-            id: 'fac-1',
-            legalName: 'Apex Food Processing Ltd',
-            city: 'Indore',
-            state: 'Madhya Pradesh',
-            tier: VerificationTier.TIER_2_VIDEO,
-            leadTimeDaysMin: 14,
-            leadTimeDaysMax: 21,
-            capabilities: [
-              { productType: 'Popped Quinoa & Protein Chips', moqUnits: 5000, capacityUnitsPerMonth: 150000 },
-              { productType: 'Nutritional Seed Blends', moqUnits: 3000, capacityUnitsPerMonth: 80000 },
-            ],
-            verifiedCertificates: [
-              { type: 'FSSAI', issuer: 'FoSCoS Food Safety Authority', validTo: '2028-12-31' },
-              { type: 'GST', issuer: 'GSTN Government of India', validTo: '2030-01-01' },
-            ],
-          },
-          {
-            id: 'fac-2',
-            legalName: 'Sovereign Nutrition Plants',
-            city: 'Pune',
-            state: 'Maharashtra',
-            tier: VerificationTier.TIER_3_ORDER_PROVEN,
-            leadTimeDaysMin: 10,
-            leadTimeDaysMax: 18,
-            capabilities: [
-              { productType: 'Cold-Pressed Energy Bars', moqUnits: 10000, capacityUnitsPerMonth: 500000 },
-              { productType: 'Protein Granola Clusters', moqUnits: 8000, capacityUnitsPerMonth: 250000 },
-            ],
-            verifiedCertificates: [
-              { type: 'FSSAI', issuer: 'FoSCoS Central Licensing', validTo: '2029-05-15' },
-              { type: 'GMP', issuer: 'Food Safety Audits International', validTo: '2027-08-30' },
-            ],
-          },
-          {
-            id: 'fac-3',
-            legalName: 'Himalayan Organic Mills',
-            city: 'Dehradun',
-            state: 'Uttarakhand',
-            tier: VerificationTier.TIER_4_INSPECTED,
-            leadTimeDaysMin: 21,
-            leadTimeDaysMax: 30,
-            capabilities: [
-              { productType: 'Roasted Makhana & Foxnuts', moqUnits: 15000, capacityUnitsPerMonth: 300000 },
-            ],
-            verifiedCertificates: [
-              { type: 'FSSAI', issuer: 'FoSCoS State Authority', validTo: '2027-10-10' },
-              { type: 'ISO', issuer: 'Bureau Veritas (ISO 22000)', validTo: '2028-04-20' },
-            ],
-          },
-        ]);
-      } else {
-        setFactories(data);
+      try {
+        const data = await api.listFactories();
+        setFactories(data || []);
+      } catch {
+        setFactories([]);
       }
     }
     loadFactories();

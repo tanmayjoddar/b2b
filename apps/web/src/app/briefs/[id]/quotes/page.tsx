@@ -29,46 +29,9 @@ export default function QuoteComparisonPage() {
         ]);
 
         setBrief(briefData);
-        // If no quotes exist yet on backend in this session, provide verified mock quotes for comparison test
-        if (!quotesData || !quotesData.quotes || quotesData.quotes.length === 0) {
-          setQuotes([
-            {
-              id: 'quote-1',
-              factoryName: 'Apex Food Processing Ltd',
-              factoryCity: 'Indore, MP',
-              factoryTier: 'TIER_2_VIDEO',
-              pricePaisePerUnit: 3800, // Rs. 38.00
-              moqUnits: 5000,
-              leadTimeDays: 21,
-              validUntil: new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString(),
-              status: 'SUBMITTED',
-            },
-            {
-              id: 'quote-2',
-              factoryName: 'Sovereign Nutrition Plants',
-              factoryCity: 'Pune, Maharashtra',
-              factoryTier: 'TIER_3_ORDER_PROVEN',
-              pricePaisePerUnit: 4150, // Rs. 41.50
-              moqUnits: 10000,
-              leadTimeDays: 14,
-              validUntil: new Date(Date.now() + 10 * 24 * 3600 * 1000).toISOString(),
-              status: 'SUBMITTED',
-            },
-            {
-              id: 'quote-3',
-              factoryName: 'Himalayan Organic Mills',
-              factoryCity: 'Dehradun, UK',
-              factoryTier: 'TIER_1_DOCUMENTS',
-              pricePaisePerUnit: 3600, // Rs. 36.00
-              moqUnits: 15000,
-              leadTimeDays: 28,
-              validUntil: new Date(Date.now() + 21 * 24 * 3600 * 1000).toISOString(),
-              status: 'SUBMITTED',
-            },
-          ]);
-        } else {
-          setQuotes(quotesData.quotes);
-        }
+        setQuotes(quotesData?.quotes || []);
+      } catch (err) {
+        setQuotes([]);
       } finally {
         setLoading(false);
       }

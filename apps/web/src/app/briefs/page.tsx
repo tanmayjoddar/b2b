@@ -15,29 +15,10 @@ export default function BriefsListPage() {
   useEffect(() => {
     async function loadBriefs() {
       try {
-        const data = await api.listBriefs().catch(() => []);
-        if (!data || data.length === 0) {
-          setBriefs([
-            {
-              id: 'brief-101',
-              productName: 'High-Protein Popped Quinoa Chips (Salt & Pepper)',
-              quantityUnits: 10000,
-              timelineWeeks: 4,
-              status: BriefStatus.SHORTLISTED,
-              createdAt: new Date().toISOString(),
-            },
-            {
-              id: 'brief-102',
-              productName: 'Gluten-Free Granola Clusters (Cranberry Almond)',
-              quantityUnits: 7500,
-              timelineWeeks: 6,
-              status: BriefStatus.MATCHING,
-              createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-            },
-          ]);
-        } else {
-          setBriefs(data);
-        }
+        const data = await api.listBriefs();
+        setBriefs(data || []);
+      } catch (err) {
+        setBriefs([]);
       } finally {
         setLoading(false);
       }

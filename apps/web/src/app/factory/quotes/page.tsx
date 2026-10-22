@@ -30,30 +30,11 @@ export default function FactoryQuotesPage() {
 
   useEffect(() => {
     async function loadRequests() {
-      const data = await api.getMyQuoteRequests().catch(() => []);
-      if (!data || data.length === 0) {
-        setRequests([
-          {
-            id: 'qr-1',
-            briefId: 'brief-101',
-            productName: 'High-Protein Popped Quinoa Chips (Salt & Pepper)',
-            quantityUnits: 10000,
-            packagingType: 'Nitrogen Flushed Foil Pouch',
-            expiresAt: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
-            status: 'REQUESTED',
-          },
-          {
-            id: 'qr-2',
-            briefId: 'brief-102',
-            productName: 'Gluten-Free Granola Clusters (Cranberry Almond)',
-            quantityUnits: 7500,
-            packagingType: 'Stand-up Zipper Doypack',
-            expiresAt: new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString(),
-            status: 'REQUESTED',
-          },
-        ]);
-      } else {
-        setRequests(data);
+      try {
+        const data = await api.getMyQuoteRequests();
+        setRequests(data || []);
+      } catch {
+        setRequests([]);
       }
     }
     loadRequests();

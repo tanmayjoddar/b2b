@@ -28,43 +28,10 @@ export default function AdminAuditPage() {
         entityType: entityType || undefined,
         actorUserId: actorUserId || undefined,
         limit: 50,
-      }).catch(() => ({
-        data: {
-          items: [
-            {
-              id: 'audit-demo-1',
-              action: 'FACTORY_VERIFIED',
-              entityType: 'Factory',
-              entityId: 'fac-mum-01',
-              actorUserId: 'usr-admin-01',
-              actor: { email: 'admin@factorymatch.in', role: 'ADMIN' },
-              createdAt: new Date().toISOString(),
-              afterJson: { tier: 'TIER_2_VIDEO', status: 'ACTIVE' },
-            },
-            {
-              id: 'audit-demo-2',
-              action: 'ORDER_TRANSITIONED',
-              entityType: 'Order',
-              entityId: 'ord-1002',
-              actorUserId: 'usr-brand-01',
-              actor: { email: 'founder@d2cbrand.com', role: 'BRAND' },
-              createdAt: new Date(Date.now() - 3600000).toISOString(),
-              afterJson: { status: 'ADVANCE_PAID' },
-            },
-            {
-              id: 'audit-demo-3',
-              action: 'PAYMENT_CAPTURED',
-              entityType: 'Payment',
-              entityId: 'pay-2001',
-              actorUserId: null,
-              actor: null,
-              createdAt: new Date(Date.now() - 7200000).toISOString(),
-              afterJson: { milestone: 'ADVANCE', amountPaise: 2500000, status: 'CAPTURED' },
-            },
-          ],
-        },
-      }));
-      setLogs(res.data?.items || []);
+      });
+      setLogs(res?.items || res?.data?.items || []);
+    } catch {
+      setLogs([]);
     } finally {
       setLoading(false);
     }

@@ -37,35 +37,11 @@ export default function AdminVerificationPage() {
 
   useEffect(() => {
     async function loadFactories() {
-      const data = await api.listFactories().catch(() => []);
-      if (!data || data.length === 0) {
-        setFactories([
-          {
-            id: 'fac-101',
-            legalName: 'Vanguard Nutrition Processing Works',
-            city: 'Nagpur',
-            state: 'Maharashtra',
-            tier: VerificationTier.TIER_1_DOCUMENTS,
-            status: 'PENDING',
-            certificates: [
-              { type: 'FSSAI', number: '10019022009841', status: 'SUBMITTED' },
-              { type: 'GST', number: '27AABCV1234F1Z9', status: 'SUBMITTED' },
-            ],
-          },
-          {
-            id: 'fac-102',
-            legalName: 'Brahmaputra Organic Mills',
-            city: 'Guwahati',
-            state: 'Assam',
-            tier: VerificationTier.TIER_1_DOCUMENTS,
-            status: 'PENDING',
-            certificates: [
-              { type: 'FSSAI', number: '10020021008742', status: 'SUBMITTED' },
-            ],
-          },
-        ]);
-      } else {
-        setFactories(data);
+      try {
+        const data = await api.listFactories();
+        setFactories(data || []);
+      } catch {
+        setFactories([]);
       }
     }
     loadFactories();

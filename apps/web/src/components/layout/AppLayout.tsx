@@ -33,40 +33,39 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('fm_user');
-    if (storedUser) {
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('fm_user') : null;
+    const storedToken = typeof window !== 'undefined' ? localStorage.getItem('fm_token') : null;
+
+    if (storedUser && storedToken) {
       try {
         setCurrentUser(JSON.parse(storedUser));
-      } catch {}
+      } catch {
+        router.push('/login');
+      }
     } else {
-      const defaultUser = {
-        id: 'usr-brand-demo',
-        email: 'founder@proteinbites.in',
-        role: Role.BRAND,
-        brandId: 'brand-1',
-      };
-      localStorage.setItem('fm_user', JSON.stringify(defaultUser));
-      setCurrentUser(defaultUser);
+      router.push('/login');
     }
-  }, []);
+  }, [router]);
 
-  const handleRoleSwitch = (role: Role) => {
+  const handleRoleSwitch = async (role: Role) => {
     setIsRoleDropdownOpen(false);
-    if (role === Role.BRAND) {
-      const user = { id: 'usr-brand-demo', email: 'founder@proteinbites.in', role: Role.BRAND, brandId: 'brand-1' };
-      localStorage.setItem('fm_user', JSON.stringify(user));
-      setCurrentUser(user);
-      router.push('/dashboard');
-    } else if (role === Role.FACTORY) {
-      const user = { id: 'usr-factory-demo', phone: '+919876543210', role: Role.FACTORY, factoryId: 'fac-1' };
-      localStorage.setItem('fm_user', JSON.stringify(user));
-      setCurrentUser(user);
-      router.push('/factory/quotes');
-    } else if (role === Role.ADMIN) {
-      const user = { id: 'usr-admin-demo', email: 'admin@factorymatch.in', role: Role.ADMIN };
-      localStorage.setItem('fm_user', JSON.stringify(user));
-      setCurrentUser(user);
-      router.push('/admin/verification');
+    try {
+      if (role === Role.BRAND) {
+        const res = await api.loginWithPassword({ email: 'founder@proteinbites.in', password: 'Brand@123456' });
+        setCurrentUser(res.user);
+        router.push('/dashboard');
+      } else if (role === Role.FACTORY) {
+        const otpRes = await api.requestOtp({ phone: '+919876543210' });
+        const res = await api.verifyOtp({ phone: '+919876543210', otp: otpRes.debugOtp || '123456' });
+        setCurrentUser(res.user);
+        router.push('/factory/quotes');
+      } else if (role === Role.ADMIN) {
+        const res = await api.loginWithPassword({ email: 'admin@factorymatch.in', password: 'Admin@123456' });
+        setCurrentUser(res.user);
+        router.push('/admin/verification');
+      }
+    } catch {
+      router.push('/login');
     }
   };
 

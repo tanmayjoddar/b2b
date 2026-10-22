@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
@@ -32,7 +32,7 @@ export class AuthService {
 
   constructor(
     private readonly repo: AuthRepository,
-    private readonly config: ConfigService,
+    @Optional() @Inject(ConfigService) private readonly config?: ConfigService,
   ) {}
 
   async registerBrand(dto: RegisterBrandDto): Promise<{ auth: AuthResponse; refreshToken: string }> {
@@ -205,7 +205,7 @@ export class AuthService {
   }
 
   private async issueTokenPair(user: AuthUser): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessSecret = this.config.get<string>('JWT_ACCESS_SECRET')!;
+    const accessSecret = this.config?.get<string>('JWT_ACCESS_SECRET') || process.env.JWT_ACCESS_SECRET || 'dev-secret';
     const accessToken = jwt.sign({ ...user }, accessSecret, {
       expiresIn: AUTH_ACCESS_TOKEN_TTL_SECONDS,
     });

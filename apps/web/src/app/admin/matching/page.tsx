@@ -24,34 +24,17 @@ export default function AdminMatchingPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const [briefsData, factoriesData] = await Promise.all([
-        api.listBriefs().catch(() => []),
-        api.listFactories().catch(() => []),
-      ]);
-
-      setBriefs(
-        briefsData && briefsData.length > 0
-          ? briefsData
-          : [
-              {
-                id: 'brief-102',
-                productName: 'Gluten-Free Granola Clusters (Cranberry Almond)',
-                quantityUnits: 7500,
-                timelineWeeks: 6,
-                status: 'SUBMITTED',
-              },
-            ],
-      );
-
-      setFactories(
-        factoriesData && factoriesData.length > 0
-          ? factoriesData
-          : [
-              { id: 'fac-1', legalName: 'Apex Food Processing Ltd', city: 'Indore, MP', tier: 'TIER_2_VIDEO' },
-              { id: 'fac-2', legalName: 'Sovereign Nutrition Plants', city: 'Pune, Maharashtra', tier: 'TIER_3_ORDER_PROVEN' },
-              { id: 'fac-3', legalName: 'Himalayan Organic Mills', city: 'Dehradun, UK', tier: 'TIER_4_INSPECTED' },
-            ],
-      );
+      try {
+        const [briefsData, factoriesData] = await Promise.all([
+          api.listBriefs(),
+          api.listFactories(),
+        ]);
+        setBriefs(briefsData || []);
+        setFactories(factoriesData || []);
+      } catch {
+        setBriefs([]);
+        setFactories([]);
+      }
     }
     fetchData();
   }, []);

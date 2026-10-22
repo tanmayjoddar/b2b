@@ -20,17 +20,24 @@ import { api } from '../../lib/api/client';
 export default function DashboardPage() {
   const [briefs, setBriefs] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [factories, setFactories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [briefsData, ordersData] = await Promise.all([
-          api.listBriefs().catch(() => []),
-          api.listOrders().catch(() => []),
+        const [briefsData, ordersData, factoriesData] = await Promise.all([
+          api.listBriefs(),
+          api.listOrders(),
+          api.listFactories(),
         ]);
         setBriefs(briefsData || []);
         setOrders(ordersData || []);
+        setFactories(factoriesData || []);
+      } catch {
+        setBriefs([]);
+        setOrders([]);
+        setFactories([]);
       } finally {
         setLoading(false);
       }
@@ -90,7 +97,7 @@ export default function DashboardPage() {
           />
           <MetricCard
             title="Audited Factories"
-            value="24"
+            value={factories.length}
             subtitle="Snacks & Nutrition cluster"
             delta={{ value: 'Tier 1–4', positive: true }}
             icon={Building2}

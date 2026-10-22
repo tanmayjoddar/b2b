@@ -37,29 +37,32 @@ export default function OrderDetailPage() {
   const router = useRouter();
   const orderId = params.id as string;
 
-  const [order, setOrder] = useState<any>({
-    id: orderId,
-    productName: 'Popped Quinoa Protein Chips (Himalayan Salt)',
-    factoryName: 'Apex Food Processing Ltd',
-    factoryCity: 'Indore, MP',
-    factoryTier: 'TIER_2_VIDEO',
-    quantityUnits: 10000,
-    totalPaise: 38000000, // Rs. 3,80,000
-    status: OrderStatus.SAMPLE_APPROVED,
-    createdAt: new Date().toISOString(),
-  });
-
-  const [sample, setSample] = useState<any>({
-    id: 'smp-101',
-    status: 'APPROVED',
-    trackingRef: 'DTDC-88492019',
-    brandFeedback: 'Taste and crispness match golden benchmark formulation.',
-  });
-
+  const [order, setOrder] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [sample, setSample] = useState<any | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
-  const currentStageIndex = ORDER_LIFECYCLE_STAGES.findIndex((s) => s.key === order.status);
+  useEffect(() => {
+    async function fetchOrder() {
+      try {
+        const data = await api.getOrder(orderId);
+        setOrder(data);
+        if (data?.samples && data.samples.length > 0) {
+          setSample(data.samples[0]);
+        }
+      } catch (err: any) {
+        setNotification(err.message || 'Order not found');
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (orderId) {
+      fetchOrder();
+    }
+  }, [orderId]);
+
+  const currentStageIndex = order ? ORDER_LIFECYCLE_STAGES.findIndex((s) => s.key === order.status) : 0;
 
   const handleStateTransition = async (nextStatus: OrderStatus) => {
     setTransitioning(true);
@@ -96,6 +99,29 @@ export default function OrderDetailPage() {
       setTransitioning(false);
     }
   };
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="py-20 text-center text-xs text-slate-400 font-semibold">
+          Loading order details...
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!order) {
+    return (
+      <AppLayout>
+        <div className="py-20 text-center space-y-3">
+          <p className="text-sm font-bold text-slate-800">Order not found</p>
+          <Link href="/orders" className="text-xs font-bold text-lime-600 hover:underline">
+            Return to Orders
+          </Link>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

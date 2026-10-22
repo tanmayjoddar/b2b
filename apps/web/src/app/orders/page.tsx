@@ -15,34 +15,10 @@ export default function OrdersPage() {
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const data = await api.listOrders().catch(() => []);
-        if (!data || data.length === 0) {
-          // Demo fallback orders
-          setOrders([
-            {
-              id: 'ord-101',
-              productName: 'Popped Quinoa Protein Chips (Himalayan Salt)',
-              factoryName: 'Apex Food Processing Ltd',
-              quantityUnits: 10000,
-              totalPaise: 38000000, // Rs. 3,80,000
-              status: OrderStatus.IN_PRODUCTION,
-              createdAt: new Date().toISOString(),
-              sampleStatus: 'APPROVED',
-            },
-            {
-              id: 'ord-102',
-              productName: 'Roasted Flaxseed Energy Bites',
-              factoryName: 'Sovereign Nutrition Plants',
-              quantityUnits: 5000,
-              totalPaise: 20750000, // Rs. 2,07,500
-              status: OrderStatus.CONFIRMED,
-              createdAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-              sampleStatus: 'DISPATCHED',
-            },
-          ]);
-        } else {
-          setOrders(data);
-        }
+        const data = await api.listOrders();
+        setOrders(data || []);
+      } catch (err) {
+        setOrders([]);
       } finally {
         setLoading(false);
       }

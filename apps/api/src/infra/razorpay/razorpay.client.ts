@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import crypto from 'node:crypto';
 
@@ -15,10 +15,10 @@ export class RazorpayClient implements IRazorpayClient {
   private readonly keySecret: string;
   private readonly webhookSecret: string;
 
-  constructor(private readonly config: ConfigService) {
-    this.keyId = this.config.get<string>('RAZORPAY_KEY_ID', 'rzp_test_placeholder');
-    this.keySecret = this.config.get<string>('RAZORPAY_KEY_SECRET', 'rzp_test_secret_placeholder');
-    this.webhookSecret = this.config.get<string>('RAZORPAY_WEBHOOK_SECRET', 'rzp_webhook_secret_placeholder');
+  constructor(@Optional() @Inject(ConfigService) private readonly config?: ConfigService) {
+    this.keyId = this.config?.get<string>('RAZORPAY_KEY_ID') || process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder';
+    this.keySecret = this.config?.get<string>('RAZORPAY_KEY_SECRET') || process.env.RAZORPAY_KEY_SECRET || 'rzp_test_secret_placeholder';
+    this.webhookSecret = this.config?.get<string>('RAZORPAY_WEBHOOK_SECRET') || process.env.RAZORPAY_WEBHOOK_SECRET || 'rzp_webhook_secret_placeholder';
   }
 
   /**
